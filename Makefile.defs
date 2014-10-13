@@ -1,0 +1,8 @@
+### Building with clang on Mac OS X
+INCLUDE = -Iimgui -Istb
+DEPEND = clang++ -std=c++11 $(INCLUDE)
+CC = clang++ -std=c++11 -Wall -pedantic -Wextra -Wno-unused-parameter $(INCLUDE)
+RELEASE_FLAGS = -O3 -DNDEBUG
+DEBUG_FLAGS = -g
+LINK = clang++ -std=c++11
+LINK_LIBS = $(INCLUDE) -lm -lglfw3 -lGLEW -framework Cocoa -framework OpenGL -framework IOKit -framework CoreVideo
