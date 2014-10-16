@@ -1,4 +1,5 @@
 # This is for GNU make; other versions of make may not run correctly.
+include Makefile.defs
 
 BUILT_DIR = built
 MAIN_PROGRAM = $(BUILT_DIR)/vrviz
@@ -6,15 +7,14 @@ MAIN_PROGRAM = $(BUILT_DIR)/vrviz
 SRC = $(shell find source -name '*.cpp')
 SRC += imgui/imgui.cpp
 
-ASSETS = $(shell find asset -name '*.*')
-SHADERS = $(shell find shader -name '*.glsl')
-
-include Makefile.defs
-
-
 # object files
 RELEASE_OBJ = $(patsubst %.cpp,obj/%.o,$(notdir $(SRC)))
 DEBUG_OBJ = $(patsubst %.cpp,obj_debug/%.o,$(notdir $(SRC)))
+
+SHADERS = $(shell find shader -name '*.vs')
+SHADERS += $(shell find shader -name '*.fs')
+BUILT_SHADERS = $(patsubst shader/%, built/%, $(SHADERS))
+
 
 # how to make the main target (debug mode, the default)
 $(MAIN_PROGRAM): $(DEBUG_OBJ) $(BUILT_ASSETS) $(BUILT_SHADERS)
@@ -41,12 +41,8 @@ obj_debug/%.o:
 
 
 # Rules to copy assets and shaders to built directory
-$(BUILT_SHADERS): $(BUILT_DIR)/%.glsl: shader/%.glsl
+$(BUILT_SHADERS): built/%: shader/%
 	cp $< $@
-
-$(BUILT_ASSETS): $(BUILT_DIR)/%: asset/%
-	cp $< $@
-
 
 # cleaning up
 .PHONY: clean
