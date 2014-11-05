@@ -13,7 +13,7 @@ DEBUG_OBJ = $(patsubst %.cpp,obj_debug/%.o,$(notdir $(SRC)))
 
 SHADERS = $(shell find shader -name '*.vs')
 SHADERS += $(shell find shader -name '*.fs')
-BUILT_SHADERS = $(patsubst shader/%, built/%, $(SHADERS))
+BUILT_SHADERS = $(patsubst shader/%, $(BUILT_DIR)/%, $(SHADERS))
 
 
 # how to make the main target (debug mode, the default)
@@ -41,7 +41,7 @@ obj_debug/%.o:
 
 
 # Rules to copy assets and shaders to built directory
-$(BUILT_SHADERS): built/%: shader/%
+$(BUILT_SHADERS): $(BUILT_DIR)/%: shader/%
 	cp $< $@
 
 # cleaning up

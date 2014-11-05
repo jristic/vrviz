@@ -17,6 +17,11 @@
 #include <GLFW/glfw3native.h>
 #endif
 
+#include <iostream>
+#include <vector>
+
+#include "shader.h"
+
 static GLFWwindow* window;
 static GLuint fontTex;
 static bool mousePressed[2] = { false, false };
@@ -92,7 +97,8 @@ static void ImImpl_SetClipboardTextFn(const char* text)
 }
 
 #ifdef _MSC_VER
-// Notify OS Input Method Editor of text input position (e.g. when using Japanese/Chinese inputs, otherwise this isn't needed)
+// Notify OS Input Method Editor of text input position (e.g. when using
+// Japanese/Chinese inputs, otherwise this isn't needed)
 static void ImImpl_ImeSetInputScreenPosFn(int x, int y)
 {
 	HWND hwnd = glfwGetWin32Window(window);
@@ -113,7 +119,11 @@ static void glfw_error_callback(int error, const char* description)
 	fputs(description, stderr);
 }
 
-static void glfw_mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+static void glfw_mouse_button_callback(
+	GLFWwindow* window,
+	int button,
+	int action,
+	int mods)
 {
 	if (action == GLFW_PRESS && button >= 0 && button < 2)
 		mousePressed[button] = true;
@@ -122,10 +132,16 @@ static void glfw_mouse_button_callback(GLFWwindow* window, int button, int actio
 static void glfw_scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
 	ImGuiIO& io = ImGui::GetIO();
-	io.MouseWheel = (yoffset != 0.0f) ? yoffset > 0.0f ? 1 : - 1 : 0;           // Mouse wheel: -1,0,+1
+	io.MouseWheel = (yoffset != 0.0f) ? yoffset > 0.0f ? 1 : - 1 : 0;
+	// Mouse wheel: -1,0,+1
 }
 
-static void glfw_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+static void glfw_key_callback(
+	GLFWwindow* window,
+	int key,
+	int scancode,
+	int action,
+	int mods)
 {
 	ImGuiIO& io = ImGui::GetIO();
 	if (action == GLFW_PRESS)
@@ -134,6 +150,8 @@ static void glfw_key_callback(GLFWwindow* window, int key, int scancode, int act
 		io.KeysDown[key] = false;
 	io.KeyCtrl = (mods & GLFW_MOD_CONTROL) != 0;
 	io.KeyShift = (mods & GLFW_MOD_SHIFT) != 0;
+	if (action == GLFW_RELEASE && (key == GLFW_KEY_ESCAPE || key == GLFW_KEY_Q))
+		glfwSetWindowShouldClose(window, true);
 }
 
 static void glfw_char_callback(GLFWwindow* window, unsigned int c)
@@ -151,7 +169,7 @@ void InitGL()
 		exit(1);
 
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-	window = glfwCreateWindow(1280, 720, "ImGui OpenGL example", NULL, NULL);
+	window = glfwCreateWindow(800, 600, "vrviz", NULL, NULL);
 	glfwMakeContextCurrent(window);
 	glfwSetKeyCallback(window, glfw_key_callback);
 	glfwSetMouseButtonCallback(window, glfw_mouse_button_callback);
@@ -262,9 +280,51 @@ void UpdateImGui()
 // Application code
 int main(int argc, char** argv)
 {
+	const static int NUM_DIGITS = 8;
+	static int digits[NUM_DIGITS] = {0};
+	// Init helpers
 	InitGL();
 	InitImGui();
+	// Init shader
+	GLuint shader;
+	std::string errors;
+	bool success = make_shader_program("line.vs", "line.fs", shader, errors);
+	if (!success) {
+		std::cerr << "failed to make shader\n" << errors;
+		exit(1);
+	}
+	// Init geometry
+	GLuint vertex_buffers[9];
+	GLuint index_buffers[9];
+	std::vector<GLfloat> dataf;
+	std::vector<GLuint> datau;
+	
+	glGenBuffers(9, vertex_buffers);
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[0]);
+	dataf = {-1.f,0.f,0.f,1.f,0.f,0.f};
+	glBufferData(GL_ARRAY_BUFFER, dataf.size()*sizeof(GLfloat), &dataf[0],
+		GL_STATIC_DRAW);
+	/*
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[1]);
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[2]);
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[3]);
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[4]);
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[5]);
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[6]);
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[7]);
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[8]);
+	*/
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	// Index buffers
+	glGenBuffers(9, index_buffers);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffers[0]);
+	datau = {0,1};
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, datau.size()*sizeof(GLuint), &datau[0],
+		GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+
+	// Main loop
 	while (!glfwWindowShouldClose(window))
 	{
 		ImGuiIO& io = ImGui::GetIO();
@@ -273,12 +333,6 @@ int main(int argc, char** argv)
 		glfwPollEvents();
 		UpdateImGui();
 		// 
-		const static int NUM_DIGITS = 8;
-		static int digits[NUM_DIGITS] = {0};
-		// Create a simple window
-		// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
-		static float f;
-		ImGui::SliderFloat("float", &f, 0.0f, 1.0f);
 		for (int& digit : digits) {
 			ImGui::InputInt("int", &digit);
 		}
@@ -297,10 +351,35 @@ int main(int argc, char** argv)
 		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
 		glClearColor(0.8f, 0.6f, 0.6f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
+		
+		//*
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glOrtho(0, (int)io.DisplaySize.x, 0, (int)io.DisplaySize.y, -1, 1);
+		// Set shader
+		glUseProgram(shader);
+		// Vertex array attributes
+		glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[0]);
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(3, GL_FLOAT, 0, 0);
+		// Bind index buffer
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffers[0]);
+		// TODO: hardcoded size here
+		glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, 0);
+		//glDrawArrays(GL_LINES, 0, 1);
+		// Unbind 
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		glUseProgram(0);
+		//*/
+		// UI Rendering
 		ImGui::Render();
+		// Swap
 		glfwSwapBuffers(window);
 	}
-
+	// Closing
 	ImGui::Shutdown();
 	glfwTerminate();
 	return 0;
