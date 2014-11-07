@@ -19,6 +19,7 @@
 
 #include <iostream>
 #include <vector>
+#include <math.h>
 
 #include "shader.h"
 
@@ -323,6 +324,8 @@ int main(int argc, char** argv)
 		GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+	int frame_count = 0;
+	const double pi = M_PI;
 
 	// Main loop
 	while (!glfwWindowShouldClose(window))
@@ -353,19 +356,25 @@ int main(int argc, char** argv)
 		glClear(GL_COLOR_BUFFER_BIT);
 		
 		//*
+		/*
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		glOrtho(0, (int)io.DisplaySize.x, 0, (int)io.DisplaySize.y, -1, 1);
-		// Set shader
-		glUseProgram(shader);
+		*/
 		// Vertex array attributes
 		glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[0]);
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glVertexPointer(3, GL_FLOAT, 0, 0);
 		// Bind index buffer
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffers[0]);
+		// Set shader
+		glUseProgram(shader);
+		// Update shader constants
+		glUniform1f(glGetUniformLocation(shader, "size"), 0.1f);
+		glUniform1f(glGetUniformLocation(shader, "theta"), 
+			fmod(frame_count/20.f, M_PI));
 		// TODO: hardcoded size here
 		glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, 0);
 		//glDrawArrays(GL_LINES, 0, 1);
@@ -378,6 +387,7 @@ int main(int argc, char** argv)
 		ImGui::Render();
 		// Swap
 		glfwSwapBuffers(window);
+		++frame_count;
 	}
 	// Closing
 	ImGui::Shutdown();

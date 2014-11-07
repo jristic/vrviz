@@ -15,22 +15,21 @@ SHADERS = $(shell find shader -name '*.vs')
 SHADERS += $(shell find shader -name '*.fs')
 BUILT_SHADERS = $(patsubst shader/%, $(BUILT_DIR)/%, $(SHADERS))
 
+.PHONY: debug
+debug: $(MAIN_PROGRAM) $(BUILT_ASSETS) $(BUILT_SHADERS)
+
+.PHONY: release
+release: $(MAIN_PROGRAM)_release $(BUILT_ASSETS) $(BUILT_SHADERS)
 
 # how to make the main target (debug mode, the default)
-$(MAIN_PROGRAM): $(DEBUG_OBJ) $(BUILT_ASSETS) $(BUILT_SHADERS)
+$(MAIN_PROGRAM): $(DEBUG_OBJ) 
 	-mkdir -p $(BUILT_DIR)
 	$(LINK) $(DEBUG_LINKFLAGS) -o $@ $(DEBUG_OBJ) $(LINK_LIBS)
 
 # how to make the main target (release mode)
-$(MAIN_PROGRAM)_release: $(RELEASE_OBJ) $(BUILT_ASSETS) $(BUILT_SHADERS)
+$(MAIN_PROGRAM)_release: $(RELEASE_OBJ)
 	-mkdir -p $(BUILT_DIR)
 	$(LINK) $(RELEASE_LINKFLAGS) -o $@ $(RELEASE_OBJ) $(LINK_LIBS)
-
-.PHONY: release
-release: $(MAIN_PROGRAM)_release
-
-.PHONY: debug
-debug: $(MAIN_PROGRAM)
 
 # how to compile each file
 .SUFFIXES:
