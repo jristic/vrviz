@@ -11,8 +11,8 @@ SRC += imgui/imgui.cpp
 RELEASE_OBJ = $(patsubst %.cpp,obj/%.o,$(notdir $(SRC)))
 DEBUG_OBJ = $(patsubst %.cpp,obj_debug/%.o,$(notdir $(SRC)))
 
-SHADERS = $(shell find shader -name '*.vs')
-SHADERS += $(shell find shader -name '*.fs')
+SHADERS = $(shell find shader -name '*.vert')
+SHADERS += $(shell find shader -name '*.frag')
 BUILT_SHADERS = $(patsubst shader/%, $(BUILT_DIR)/%, $(SHADERS))
 
 .PHONY: debug

@@ -289,11 +289,14 @@ int main(int argc, char** argv)
 	// Init shader
 	GLuint shader;
 	std::string errors;
-	bool success = make_shader_program("line.vs", "line.fs", shader, errors);
+	bool success = make_shader_program("line.vert", "line.frag", shader, errors);
 	if (!success) {
 		std::cerr << "failed to make shader\n" << errors;
 		exit(1);
 	}
+	glUseProgram(shader);
+	glUniform1f(glGetUniformLocation(shader, "aspect"), 1.3333f);
+	glUseProgram(0);
 	// Init geometry
 	GLuint vertex_buffers[9];
 	GLuint index_buffers[9];
@@ -325,7 +328,6 @@ int main(int argc, char** argv)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	int frame_count = 0;
-	const double pi = M_PI;
 
 	// Main loop
 	while (!glfwWindowShouldClose(window))
@@ -372,9 +374,9 @@ int main(int argc, char** argv)
 		// Set shader
 		glUseProgram(shader);
 		// Update shader constants
-		glUniform1f(glGetUniformLocation(shader, "size"), 0.1f);
-		glUniform1f(glGetUniformLocation(shader, "theta"), 
-			fmod(frame_count/20.f, M_PI));
+		glUniform1i(glGetUniformLocation(shader, "index"), 0);
+		glUniform1i(glGetUniformLocation(shader, "frame"), frame_count);
+		glUniform3f(glGetUniformLocation(shader, "color"), 1.f, 1.f, 0.f);
 		// TODO: hardcoded size here
 		glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, 0);
 		//glDrawArrays(GL_LINES, 0, 1);
