@@ -27,10 +27,9 @@ void main()
 
 	gl_Position = 
 		vec4(
-			(x*cos(theta) - y*sin(theta)) * size,
-			(x*sin(theta) + y*cos(theta)) * size * aspect,
-			gl_Vertex.zw
-		)
+			(x*cos(theta) + y*sin(theta)) * size,
+			(-x*sin(theta) + y*cos(theta)) * size * aspect,
+			gl_Vertex.zw)
 		+
 		offset;
 }

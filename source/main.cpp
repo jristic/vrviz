@@ -170,6 +170,7 @@ void InitGL()
 		exit(1);
 
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+	// TODO: render to a lower rez and then upscale to an even multiple resolution
 	window = glfwCreateWindow(800, 600, "vrviz", NULL, NULL);
 	glfwMakeContextCurrent(window);
 	glfwSetKeyCallback(window, glfw_key_callback);
@@ -407,6 +408,7 @@ int main(int argc, char** argv)
 		{
 			const int type = digits[i];
 			glUniform1i(glGetUniformLocation(shader, "index"), i);
+			glUniform1i(glGetUniformLocation(shader, "digit"), digits[i]);
 			glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[type]);
 			glEnableClientState(GL_VERTEX_ARRAY);
 			glVertexPointer(3, GL_FLOAT, 0, 0);
