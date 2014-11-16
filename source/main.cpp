@@ -278,6 +278,18 @@ void UpdateImGui()
 	ImGui::NewFrame();
 }
 
+void increment_score(int* digits, int num_digits) {
+	for (int i = 0 ; i < num_digits ; ++i) {
+		if (i == num_digits - 1 || digits[i] < digits[i+1]) {
+			++digits[i];
+			break;
+		}
+		else {
+			digits[i] = 0;
+		}
+	}	
+}
+
 // Application code
 int main(int argc, char** argv)
 {
@@ -375,29 +387,12 @@ int main(int argc, char** argv)
 			ImGui::InputInt("int", &digit);
 		}
 		if (ImGui::Button("increment")) {
-			for (int i = 0 ; i < NUM_DIGITS ; ++i) {
-				if (i == NUM_DIGITS - 1 || digits[i] < digits[i+1]) {
-					++digits[i];
-					break;
-				}
-				else {
-					digits[i] = 0;
-				}
-			}
+			increment_score(digits, NUM_DIGITS);
 		}
 		ImGui::Checkbox("auto increment", &should_auto_increment);
 		if (should_auto_increment) {
 			if (frame_count && frame_count % 30 == 0) {
-				// TODO: copy pasted from above
-				for (int i = 0 ; i < NUM_DIGITS ; ++i) {
-					if (i == NUM_DIGITS - 1 || digits[i] < digits[i+1]) {
-						++digits[i];
-						break;
-					}
-					else {
-						digits[i] = 0;
-					}
-				}
+				increment_score(digits, NUM_DIGITS);
 			}
 		}
 		// Rendering
