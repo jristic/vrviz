@@ -281,8 +281,9 @@ void UpdateImGui()
 // Application code
 int main(int argc, char** argv)
 {
-	const static int NUM_DIGITS = 8;
-	static int digits[NUM_DIGITS] = {0};
+	const int NUM_DIGITS = 8;
+	int digits[NUM_DIGITS] = {0};
+	bool should_auto_increment = false;
 	// Init helpers
 	InitGL();
 	InitImGui();
@@ -300,17 +301,39 @@ int main(int argc, char** argv)
 	// Init geometry
 	GLuint vertex_buffers[9];
 	GLuint index_buffers[9];
+	int index_counts[9] = {0};
 	std::vector<GLfloat> dataf;
 	std::vector<GLuint> datau;
-	
 	glGenBuffers(9, vertex_buffers);
+	glGenBuffers(9, index_buffers);
+	
+	// 0 - line
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[0]);
-	dataf = {-1.f,0.f,0.f,1.f,0.f,0.f};
+	dataf = {
+		-1.f,0.f,0.f,
+		1.f,0.f,0.f};
+	glBufferData(GL_ARRAY_BUFFER, dataf.size()*sizeof(GLfloat), &dataf[0],
+		GL_STATIC_DRAW);
+	// 1 - 3 pointed line
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[1]);
+	dataf = {
+		0.f,0.f,0.f,
+		-1.f,0.f,0.f,
+		0.707,0.707,0.f,
+		0.707,-0.707,0.f};
+	glBufferData(GL_ARRAY_BUFFER, dataf.size()*sizeof(GLfloat), &dataf[0],
+		GL_STATIC_DRAW);
+	// 2 - cross
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[2]);
+	dataf = {
+		0.f,0.f,0.f,
+		-1.f,0.f,0.f,
+		0.f,1.f,0.f,
+		1.f,0.f,0.f,
+		0.f,-1.f,0.f};
 	glBufferData(GL_ARRAY_BUFFER, dataf.size()*sizeof(GLfloat), &dataf[0],
 		GL_STATIC_DRAW);
 	/*
-	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[1]);
-	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[2]);
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[3]);
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[4]);
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[5]);
@@ -320,9 +343,19 @@ int main(int argc, char** argv)
 	*/
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	// Index buffers
-	glGenBuffers(9, index_buffers);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffers[0]);
 	datau = {0,1};
+	index_counts[0] = datau.size();
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, datau.size()*sizeof(GLuint), &datau[0],
+		GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffers[1]);
+	datau = {0,1, 0,2, 0,3};
+	index_counts[1] = datau.size();
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, datau.size()*sizeof(GLuint), &datau[0],
+		GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffers[2]);
+	datau = {0,1, 0,2, 0,3, 0,4};
+	index_counts[2] = datau.size();
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, datau.size()*sizeof(GLuint), &datau[0],
 		GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -352,39 +385,42 @@ int main(int argc, char** argv)
 				}
 			}
 		}
+		ImGui::Checkbox("auto increment", &should_auto_increment);
+		if (should_auto_increment) {
+			if (frame_count && frame_count % 30 == 0) {
+				// TODO: copy pasted from above
+				for (int i = 0 ; i < NUM_DIGITS ; ++i) {
+					if (i == NUM_DIGITS - 1 || digits[i] < digits[i+1]) {
+						++digits[i];
+						break;
+					}
+					else {
+						digits[i] = 0;
+					}
+				}
+			}
+		}
 		// Rendering
 		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
 		glClearColor(0.8f, 0.6f, 0.6f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		
-		//*
-		/*
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glOrtho(0, (int)io.DisplaySize.x, 0, (int)io.DisplaySize.y, -1, 1);
-		*/
-		// Vertex array attributes
-		glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[0]);
-		glEnableClientState(GL_VERTEX_ARRAY);
-		glVertexPointer(3, GL_FLOAT, 0, 0);
-		// Bind index buffer
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffers[0]);
-		// Set shader
 		glUseProgram(shader);
-		// Update shader constants
-		glUniform1i(glGetUniformLocation(shader, "index"), 0);
 		glUniform1i(glGetUniformLocation(shader, "frame"), frame_count);
 		glUniform3f(glGetUniformLocation(shader, "color"), 1.f, 1.f, 0.f);
-		// TODO: hardcoded size here
-		glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, 0);
-		//glDrawArrays(GL_LINES, 0, 1);
-		// Unbind 
+		for (int i = 0 ; i < NUM_DIGITS ; ++i)
+		{
+			const int type = digits[i];
+			glUniform1i(glGetUniformLocation(shader, "index"), i);
+			glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[type]);
+			glEnableClientState(GL_VERTEX_ARRAY);
+			glVertexPointer(3, GL_FLOAT, 0, 0);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffers[type]);
+			glDrawElements(GL_LINES, index_counts[type], GL_UNSIGNED_INT, 0);
+		}
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 		glUseProgram(0);
-		//*/
 		// UI Rendering
 		ImGui::Render();
 		// Swap

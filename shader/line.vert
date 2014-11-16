@@ -10,17 +10,19 @@ uniform int frame;
 
 void main()
 {
-	const float size = 0.1;
+	const float size = 0.05;
 	const float rotate_interval = 70.0;
-	float theta = (float(frame) / rotate_interval) * PI;
+	float theta_offset = float(index) * 0.1;
+	float theta = (float(frame) / rotate_interval - theta_offset) * PI;
 
 	float x = gl_Vertex.x;
 	float y = gl_Vertex.y;
 
-	const float orbit_interval = 300.0;
+	const float orbit_interval = 200.0;
 	const float orbit_x = 0.8;
 	const float orbit_y = 0.3;
-	float phi = (float(frame) / orbit_interval) * PI;
+	float phi_offset = float(index) * 0.15;
+	float phi = (float(frame) / orbit_interval - phi_offset) * PI;
 	vec4 offset = vec4( orbit_x * cos(phi), orbit_y * sin(phi), 0.0, 0.0 );
 
 	gl_Position = 
