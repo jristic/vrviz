@@ -294,7 +294,7 @@ void increment_score(int* digits, int num_digits) {
 // Application code
 int main(int argc, char** argv)
 {
-	const int NUM_DIGITS = 8;
+	const int NUM_DIGITS = 7;
 	int digits[NUM_DIGITS] = {0};
 	bool should_auto_increment = false;
 	// Init helpers
@@ -356,6 +356,54 @@ int main(int argc, char** argv)
 	};
 	glBufferData(GL_ARRAY_BUFFER, dataf.size()*sizeof(GLfloat), &dataf[0],
 		GL_STATIC_DRAW);
+	// TODO: this one just dupes 3 right now
+	// 4 - fat 3-line
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[4]);
+	dataf = {
+		-1.f,0.2f,0.f,
+		1.f,0.2f,0.f,
+		1.f,-0.2f,0.f,
+		-1.f,-0.2f,0.f
+	};
+	glBufferData(GL_ARRAY_BUFFER, dataf.size()*sizeof(GLfloat), &dataf[0],
+		GL_STATIC_DRAW);
+	// 5 - fat cross
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[5]);
+	dataf = {
+		-1.f,0.2f,0.f,
+		-0.2f,0.2f,0.f,
+		-0.2f,1.f,0.f,
+		0.2f,1.f,0.f,
+		0.2f,0.2f,0.f,
+		1.f,0.2f,0.f,
+		1.f,-0.2f,0.f,
+		0.2f,-0.2f,0.f,
+		0.2f,-1.f,0.f,
+		-0.2f,-1.f,0.f,
+		-0.2f,-0.2f,0.f,
+		-1.f,-0.2f,0.f
+	};
+	glBufferData(GL_ARRAY_BUFFER, dataf.size()*sizeof(GLfloat), &dataf[0],
+		GL_STATIC_DRAW);
+	// 6 - triangle
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[6]);
+	dataf = {
+		-1.f,-0.866f,0.f,
+		1.f,-0.866f,0.f,
+		0.f,0.866f,0.f,
+	};
+	glBufferData(GL_ARRAY_BUFFER, dataf.size()*sizeof(GLfloat), &dataf[0],
+		GL_STATIC_DRAW);
+	// 7 - square
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[7]);
+	dataf = {
+		-1.f,-1.f,0.f,
+		1.f,-1.f,0.f,
+		1.f,1.f,0.f,
+		-1.f,1.f,0.f
+	};
+	glBufferData(GL_ARRAY_BUFFER, dataf.size()*sizeof(GLfloat), &dataf[0],
+		GL_STATIC_DRAW);
 	/*
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[3]);
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[4]);
@@ -390,6 +438,31 @@ int main(int argc, char** argv)
 	index_counts[3] = datau.size();
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, datau.size()*sizeof(GLuint), &datau[0],
 		GL_STATIC_DRAW);
+	// 4 - fat 3-line
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffers[4]);
+	datau = {0,1, 1,2, 2,3, 3,0};
+	index_counts[4] = datau.size();
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, datau.size()*sizeof(GLuint), &datau[0],
+		GL_STATIC_DRAW);
+	// 5 - fat cross
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffers[5]);
+	datau = {0,1, 1,2, 2,3, 3,4, 4,5, 5,6, 6,7, 7,8, 8,9, 9,10, 10,11, 11,0};
+	index_counts[5] = datau.size();
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, datau.size()*sizeof(GLuint), &datau[0],
+		GL_STATIC_DRAW);
+	// 6 - triangle
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffers[6]);
+	datau = {0,1, 1,2, 2,0};
+	index_counts[6] = datau.size();
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, datau.size()*sizeof(GLuint), &datau[0],
+		GL_STATIC_DRAW);
+	// 7 - square
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffers[7]);
+	datau = {0,1, 1,2, 2,3, 3,0};
+	index_counts[7] = datau.size();
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, datau.size()*sizeof(GLuint), &datau[0],
+		GL_STATIC_DRAW);
+	
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	int frame_count = 0;

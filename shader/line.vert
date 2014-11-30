@@ -21,7 +21,7 @@ void main()
 	const float orbit_interval = 200.0;
 	const float orbit_x = 0.8;
 	const float orbit_y = 0.3;
-	float phi_offset = float(index) * 0.15;
+	float phi_offset = -float(index) * 0.15;
 	float phi = (float(frame) / orbit_interval - phi_offset) * PI;
 	vec4 offset = vec4( orbit_x * cos(phi), orbit_y * sin(phi), 0.0, 0.0 );
 
