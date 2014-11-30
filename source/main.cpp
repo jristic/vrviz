@@ -332,8 +332,8 @@ int main(int argc, char** argv)
 	dataf = {
 		0.f,0.f,0.f,
 		-1.f,0.f,0.f,
-		0.707,0.707,0.f,
-		0.707,-0.707,0.f};
+		0.5,0.866,0.f,
+		0.5,-0.866,0.f};
 	glBufferData(GL_ARRAY_BUFFER, dataf.size()*sizeof(GLfloat), &dataf[0],
 		GL_STATIC_DRAW);
 	// 2 - cross
