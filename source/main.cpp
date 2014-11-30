@@ -346,6 +346,16 @@ int main(int argc, char** argv)
 		0.f,-1.f,0.f};
 	glBufferData(GL_ARRAY_BUFFER, dataf.size()*sizeof(GLfloat), &dataf[0],
 		GL_STATIC_DRAW);
+	// 3 - fat line
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[3]);
+	dataf = {
+		-1.f,0.2f,0.f,
+		1.f,0.2f,0.f,
+		1.f,-0.2f,0.f,
+		-1.f,-0.2f,0.f
+	};
+	glBufferData(GL_ARRAY_BUFFER, dataf.size()*sizeof(GLfloat), &dataf[0],
+		GL_STATIC_DRAW);
 	/*
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[3]);
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[4]);
@@ -356,19 +366,28 @@ int main(int argc, char** argv)
 	*/
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	// Index buffers
+	// 0 - line
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffers[0]);
 	datau = {0,1};
 	index_counts[0] = datau.size();
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, datau.size()*sizeof(GLuint), &datau[0],
 		GL_STATIC_DRAW);
+	// 1 - 3-line
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffers[1]);
 	datau = {0,1, 0,2, 0,3};
 	index_counts[1] = datau.size();
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, datau.size()*sizeof(GLuint), &datau[0],
 		GL_STATIC_DRAW);
+	// 2 - cross
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffers[2]);
 	datau = {0,1, 0,2, 0,3, 0,4};
 	index_counts[2] = datau.size();
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, datau.size()*sizeof(GLuint), &datau[0],
+		GL_STATIC_DRAW);
+	// 3 - fat line
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffers[3]);
+	datau = {0,1, 1,2, 2,3, 3,0};
+	index_counts[3] = datau.size();
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, datau.size()*sizeof(GLuint), &datau[0],
 		GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -398,7 +417,7 @@ int main(int argc, char** argv)
 		}
 		// Rendering
 		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-		glClearColor(0.8f, 0.6f, 0.6f, 1.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		
 		glUseProgram(shader);
