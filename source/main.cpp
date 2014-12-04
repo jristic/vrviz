@@ -397,10 +397,21 @@ int main(int argc, char** argv)
 	// 7 - square
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[7]);
 	dataf = {
-		-1.f,-1.f,0.f,
-		1.f,-1.f,0.f,
-		1.f,1.f,0.f,
-		-1.f,1.f,0.f
+		-0.707f,	-0.707f,	0.f,
+		0.707f,		-0.707f,	0.f,
+		0.707f,		0.707f,		0.f,
+		-0.707f,	0.707f,		0.f
+	};
+	glBufferData(GL_ARRAY_BUFFER, dataf.size()*sizeof(GLfloat), &dataf[0],
+		GL_STATIC_DRAW);
+	// 8 - pentagon
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[8]);
+	dataf = {
+		1.f,		0.f,		0.f,
+		0.309f,		-0.951f,	0.f,
+		-0.809f,	-0.588f,	0.f,
+		-0.809f,	0.588f,		0.f,
+		0.309f,		0.951f,		0.f
 	};
 	glBufferData(GL_ARRAY_BUFFER, dataf.size()*sizeof(GLfloat), &dataf[0],
 		GL_STATIC_DRAW);
@@ -462,7 +473,13 @@ int main(int argc, char** argv)
 	index_counts[7] = datau.size();
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, datau.size()*sizeof(GLuint), &datau[0],
 		GL_STATIC_DRAW);
-	
+	// 8 - pentagon
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffers[8]);
+	datau = {0,1, 1,2, 2,3, 3,4, 4,0};
+	index_counts[8] = datau.size();
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, datau.size()*sizeof(GLuint), &datau[0],
+		GL_STATIC_DRAW);
+
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	int frame_count = 0;

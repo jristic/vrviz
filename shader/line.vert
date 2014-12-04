@@ -10,6 +10,7 @@ uniform int frame;
 
 void main()
 {
+	// TODO: modulate size based on how high it is
 	const float size = 0.05;
 	const float rotate_interval = 70.0;
 	float theta_offset = float(index) * 0.1;
