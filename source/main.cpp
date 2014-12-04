@@ -297,6 +297,7 @@ int main(int argc, char** argv)
 	const int NUM_DIGITS = 7;
 	int digits[NUM_DIGITS] = {0};
 	bool should_auto_increment = false;
+	bool paused = false;
 	// Init helpers
 	InitGL();
 	InitImGui();
@@ -356,14 +357,18 @@ int main(int argc, char** argv)
 	};
 	glBufferData(GL_ARRAY_BUFFER, dataf.size()*sizeof(GLfloat), &dataf[0],
 		GL_STATIC_DRAW);
-	// TODO: this one just dupes 3 right now
 	// 4 - fat 3-line
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[4]);
 	dataf = {
-		-1.f,0.2f,0.f,
-		1.f,0.2f,0.f,
-		1.f,-0.2f,0.f,
-		-1.f,-0.2f,0.f
+		-1.f,		-0.2f,		0.f,
+		-1.f,		0.2f,		0.f,
+		-0.115f,	0.2f,		0.f,
+		0.316f,		0.949f,		0.f,
+		0.663f,		0.748f,		0.f,
+		0.3f,		0.f,		0.f,
+		0.663f,		-0.748f,	0.f,
+		0.316f,		-0.949f,	0.f,
+		-0.115f,	-0.2f,		0.f
 	};
 	glBufferData(GL_ARRAY_BUFFER, dataf.size()*sizeof(GLfloat), &dataf[0],
 		GL_STATIC_DRAW);
@@ -451,7 +456,7 @@ int main(int argc, char** argv)
 		GL_STATIC_DRAW);
 	// 4 - fat 3-line
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffers[4]);
-	datau = {0,1, 1,2, 2,3, 3,0};
+	datau = {0,1, 1,2, 2,3, 3,4, 4,5, 5,6, 6,7, 7,8, 8,0};
 	index_counts[4] = datau.size();
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, datau.size()*sizeof(GLuint), &datau[0],
 		GL_STATIC_DRAW);
@@ -505,6 +510,7 @@ int main(int argc, char** argv)
 				increment_score(digits, NUM_DIGITS);
 			}
 		}
+		ImGui::Checkbox("paused", &paused);
 		// Rendering
 		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -531,7 +537,8 @@ int main(int argc, char** argv)
 		ImGui::Render();
 		// Swap
 		glfwSwapBuffers(window);
-		++frame_count;
+		if (!paused)
+			++frame_count;
 	}
 	// Closing
 	ImGui::Shutdown();
