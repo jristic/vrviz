@@ -10,8 +10,6 @@ uniform int frame;
 
 void main()
 {
-	// TODO: modulate size based on how high it is
-	const float size = 0.05;
 	const float rotate_interval = 70.0;
 	float theta_offset = float(index) * 0.1;
 	float theta = (float(frame) / rotate_interval - theta_offset) * PI;
@@ -25,6 +23,8 @@ void main()
 	float phi_offset = -float(index) * 0.15;
 	float phi = (float(frame) / orbit_interval - phi_offset) * PI;
 	vec4 offset = vec4( orbit_x * cos(phi), orbit_y * sin(phi), 0.0, 0.0 );
+
+	float size = 0.05 + ((sin(phi)+1.0)*0.015);
 
 	gl_Position = 
 		vec4(
