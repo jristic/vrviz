@@ -27,6 +27,9 @@ static GLFWwindow* window;
 static GLuint fontTex;
 static bool mousePressed[2] = { false, false };
 static ImVec2 mousePosScale(1.0f, 1.0f);
+static int sourceWidth	= 300;
+static int sourceHeight	= 150;
+static int targetScale 	= 2;
 
 // This is the main rendering function that you have to implement and provide to ImGui (via setting up 'RenderDrawListsFn' in the ImGuiIO structure)
 // If text or lines are blurry when integrating ImGui in your engine:
@@ -171,7 +174,12 @@ void InitGL()
 
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 	// TODO: render to a lower rez and then upscale to an even multiple resolution
-	window = glfwCreateWindow(800, 600, "vrviz", NULL, NULL);
+	window = glfwCreateWindow(
+		sourceWidth * targetScale, 
+		sourceHeight * targetScale,
+		"vrviz",
+		NULL,
+		NULL);
 	glfwMakeContextCurrent(window);
 	glfwSetKeyCallback(window, glfw_key_callback);
 	glfwSetMouseButtonCallback(window, glfw_mouse_button_callback);
@@ -310,7 +318,55 @@ int main(int argc, char** argv)
 		exit(1);
 	}
 	glUseProgram(shader);
-	glUniform1f(glGetUniformLocation(shader, "aspect"), 1.3333f);
+	glUniform1f(glGetUniformLocation(shader, "aspect"),
+		(float)sourceWidth/sourceHeight);
+	glUseProgram(0);
+	// Set up secondary framebuffer for rendering to texture
+	GLuint frame_buffer = 0;
+	glGenFramebuffers(1, &frame_buffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
+	// The texture we're going to render to
+	GLuint rendered_texture;
+	glGenTextures(1, &rendered_texture);
+	glBindTexture(GL_TEXTURE_2D, rendered_texture);
+	// Give an empty image to OpenGL ( the last "0" )
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, sourceWidth, sourceHeight, 0, GL_RGB,
+		GL_UNSIGNED_BYTE, 0);
+	// Use box filter
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	// Set "renderedTexture" as our colour attachement #0
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+		rendered_texture, 0); 
+	// Set the list of draw buffers.
+	GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+	glDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers
+	// Always check that our framebuffer is ok
+	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		printf("failed to setup framebuffer\n");
+		exit(-1);
+	}
+	// Setup vertex buffers and shader for rendering texture to screen
+	const GLfloat g_quad_vertex_buffer_data[] = {
+	    -1.0f, -1.0f, 0.0f,
+	    3.0f, -1.0f, 0.0f,
+	    -1.0f,  3.0f, 0.0f,
+	};
+	GLuint quad_vertexbuffer;
+	glGenBuffers(1, &quad_vertexbuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_quad_vertex_buffer_data), g_quad_vertex_buffer_data, GL_STATIC_DRAW);
+	// Create and compile our GLSL program from the shaders
+	GLuint quad_shader;
+	success = make_shader_program("quad.vert", "quad.frag", quad_shader, errors);
+	if (!success) {
+		std::cerr << "failed to make shader\n" << errors;
+		exit(1);
+	}
+	GLuint tex_id = glGetUniformLocation(quad_shader, "renderedTexture");
+	glUseProgram(quad_shader);
+	// Set our "renderedTexture" sampler to user Texture Unit 0
+	glUniform1i(tex_id, 0);
 	glUseProgram(0);
 	// Init geometry
 	GLuint vertex_buffers[9];
@@ -320,7 +376,7 @@ int main(int argc, char** argv)
 	std::vector<GLuint> datau;
 	glGenBuffers(9, vertex_buffers);
 	glGenBuffers(9, index_buffers);
-	
+	// Setup our shapes
 	// 0 - line
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[0]);
 	dataf = {
@@ -497,22 +553,27 @@ int main(int argc, char** argv)
 		io.MouseWheel = 0;
 		glfwPollEvents();
 		UpdateImGui();
-		// 
-		for (int& digit : digits) {
-			ImGui::InputInt("int", &digit);
-		}
-		if (ImGui::Button("increment")) {
-			increment_score(digits, NUM_DIGITS);
-		}
-		ImGui::Checkbox("auto increment", &should_auto_increment);
-		if (should_auto_increment) {
-			if (frame_count && frame_count % 30 == 0) {
+
+		bool shown = ImGui::Begin("Info");
+		if (shown) {
+			for (int& digit : digits) {
+				ImGui::InputInt("int", &digit);
+			}
+			if (ImGui::Button("increment")) {
 				increment_score(digits, NUM_DIGITS);
 			}
+			ImGui::Checkbox("auto increment", &should_auto_increment);
+			ImGui::Checkbox("paused", &paused);
 		}
-		ImGui::Checkbox("paused", &paused);
+		ImGui::End();
+		// Auto increment
+		if (should_auto_increment)
+			if (frame_count && frame_count % 30 == 0)
+				increment_score(digits, NUM_DIGITS);
 		// Rendering
-		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+		// Render to texture
+		glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
+		glViewport(0, 0, sourceWidth, sourceHeight);
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		
@@ -530,9 +591,29 @@ int main(int argc, char** argv)
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffers[type]);
 			glDrawElements(GL_LINES, index_counts[type], GL_UNSIGNED_INT, 0);
 		}
+
+		// Switch to rendering to screen
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		// Render texture fullscreen
+		glUseProgram(quad_shader);
+		// Bind our texture in Texture Unit 0
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, rendered_texture);
+		// Use quad buffer
+		glBindBuffer(GL_ARRAY_BUFFER, quad_vertexbuffer);
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(3, GL_FLOAT, 0, 0);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+
+		// Unbind resources
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 		glUseProgram(0);
+
 		// UI Rendering
 		ImGui::Render();
 		// Swap
