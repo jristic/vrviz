@@ -394,13 +394,14 @@ int main(int argc, char** argv)
 	glUniform1i(tex_id, 0);
 	glUseProgram(0);
 	// Init geometry
-	GLuint vertex_buffers[9];
-	GLuint index_buffers[9];
-	int index_counts[9] = {0};
+	const int NUM_SHAPES = 9;
+	GLuint vertex_buffers[NUM_SHAPES];
+	GLuint index_buffers[NUM_SHAPES];
+	int index_counts[NUM_SHAPES] = {0};
 	std::vector<GLfloat> dataf;
 	std::vector<GLuint> datau;
-	glGenBuffers(9, vertex_buffers);
-	glGenBuffers(9, index_buffers);
+	glGenBuffers(NUM_SHAPES, vertex_buffers);
+	glGenBuffers(NUM_SHAPES, index_buffers);
 	// Setup our shapes
 	// 0 - line
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[0]);
@@ -595,6 +596,9 @@ int main(int argc, char** argv)
 			ImGui::Checkbox("paused", &paused);
 		}
 		ImGui::End();
+		// Prevent overflow
+		for (int& digit : digits)
+			digit = std::max(std::min(digit, NUM_SHAPES-1), 0);
 		// Auto increment
 		if (should_auto_increment)
 			if (frame_count && frame_count % 30 == 0)
